@@ -10,19 +10,23 @@ from .mq.client import RabbitMQClient
 User = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
-    agent_id = serializers.SerializerMethodField()
+    agent_profile = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'phone_number', 'role', 'is_verified', 'created_at', 'updated_at', 'agent_id')
-        read_only_fields = ('id', 'created_at', 'updated_at', 'agent_id')
+        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'phone_number', 'role', 'is_verified', 'created_at', 'updated_at', 'agent_profile')
+        read_only_fields = ('id', 'created_at', 'updated_at', 'agent_profile')
 
-    def get_agent_id(self, obj):
-        """Get agent_id if user is an agent"""
+    def get_agent_profile(self, obj):
+        """Get full agent profile if user is an agent"""
         if obj.role == 'AGENT':
             try:
                 agent = Agent.objects.get(user=obj)
-                return agent.agent_id
+                return {
+                    'agent_id': agent.agent_id,
+                    'business_name': agent.business_name,
+                    'status': agent.status
+                }
             except Agent.DoesNotExist:
                 return None
         return None

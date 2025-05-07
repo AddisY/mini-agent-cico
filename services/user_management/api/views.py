@@ -165,9 +165,15 @@ class AgentViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-    def perform_create(self, serializer):
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
         agent = serializer.save()
         logger.info(f"New agent created: {agent.business_name} ({agent.agent_id})")
+        
+        # Return the full agent data using the regular serializer
+        response_serializer = AgentSerializer(agent)
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['post'], permission_classes=[IsAdmin])
     def activate(self, request, pk=None):

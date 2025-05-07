@@ -60,7 +60,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
             
             # Add transaction_id and agent_id
             data['transaction_id'] = transaction_id
-            data['agent_id'] = request.user.id
+            data['agent_id'] = request.user.agent_id  # Use the agent_id from the agent profile
             
             logger.info(f"Request data after adding IDs: {data}")
 
@@ -75,7 +75,7 @@ class TransactionViewSet(viewsets.ModelViewSet):
             if transaction_type not in [TransactionType.WALLET_LOAD.value, TransactionType.BANK_DEPOSIT.value]:
                 wallet_client = WalletServiceClient()
                 has_balance, error_message = wallet_client.check_balance(
-                    agent_id=str(request.user.id),
+                    agent_id=request.user.agent_id,
                     amount=serializer.validated_data['amount'],
                     auth_token=request.headers.get('Authorization')
                 )
@@ -102,20 +102,20 @@ class TransactionViewSet(viewsets.ModelViewSet):
                 
                 # Publish event
                 try:
-                    mq_client = RabbitMQClient()
-                    mq_client.publish(
-                        routing_key='transaction.initiated',
-                        message={
-                            'transaction_id': str(transaction.transaction_id),
-                            'transaction_type': transaction.transaction_type.value,
-                            'amount': str(transaction.amount),
-                            'agent_id': str(transaction.agent_id),
-                            'customer_identifier': transaction.customer_identifier,
-                            'provider': transaction.get_provider_display(),
-                            'status': TransactionStatus.INITIATED.value
-                        }
-                    )
-                    logger.info("Transaction initiated event published successfully")
+                    with RabbitMQClient() as mq_client:
+                        mq_client.publish(
+                            routing_key='transaction.initiated',
+                            message={
+                                'transaction_id': str(transaction.transaction_id),
+                                'transaction_type': transaction.transaction_type.name,
+                                'amount': str(transaction.amount),
+                                'agent_id': str(transaction.agent_id),
+                                'customer_identifier': transaction.customer_identifier,
+                                'provider': transaction.get_provider_display(),
+                                'status': TransactionStatus.INITIATED.name
+                            }
+                        )
+                        logger.info("Transaction initiated event published successfully")
                 except Exception as e:
                     logger.error(f"Failed to publish transaction event: {str(e)}")
                     # Don't fail the request if event publishing fails

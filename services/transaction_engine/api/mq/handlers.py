@@ -23,7 +23,7 @@ class TransactionEventHandler:
         """
         message = {
             'transaction_id': str(transaction.transaction_id),
-            'transaction_type': transaction.transaction_type.value,
+            'transaction_type': transaction.transaction_type.name,
             'amount': str(transaction.amount),
             'agent_id': str(transaction.agent_id),
             'customer_identifier': transaction.customer_identifier,

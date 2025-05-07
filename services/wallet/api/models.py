@@ -1,6 +1,7 @@
 from django.db import models
 import uuid
 from decimal import Decimal
+import logging
 
 class Wallet(models.Model):
     """
@@ -27,10 +28,18 @@ class Wallet(models.Model):
         :param amount: Amount to add or subtract
         :param is_credit: True for credit (add), False for debit (subtract)
         """
+        logger = logging.getLogger(__name__)
+        logger.info(f"Updating wallet {self.id} balance: Current={self.balance}, Amount={amount}, Operation={'credit' if is_credit else 'debit'}")
+        
         if is_credit:
             self.balance += amount
+            logger.info(f"Credited amount {amount}. New balance: {self.balance}")
         else:
             if self.balance < amount:
+                logger.error(f"Insufficient balance: Required={amount}, Available={self.balance}")
                 raise ValueError('Insufficient balance')
             self.balance -= amount
-        self.save() 
+            logger.info(f"Debited amount {amount}. New balance: {self.balance}")
+        
+        self.save()
+        logger.info(f"Wallet balance updated and saved successfully. Final balance: {self.balance}") 

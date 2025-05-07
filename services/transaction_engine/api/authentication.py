@@ -49,16 +49,22 @@ class UserManagementTokenAuthentication(authentication.BaseAuthentication):
             
             if user_response.status_code == 200:
                 user_data = user_response.json()
+                logger.info(f"Full user data received: {user_data}")
                 logger.info(f"User role: {user_data.get('role')}")
+                logger.info(f"Agent profile data: {user_data.get('agent_profile')}")
                 
                 # Check if the user is an agent
                 if user_data.get('role') != 'AGENT':
                     raise exceptions.AuthenticationFailed('Only agents can perform transactions')
                 
-                # Add the agent_id to the user data
-                user_data['agent_id'] = user_data.get('id')  # Assuming 'id' is the agent's ID
+                # Get agent_id from agent_profile
+                agent_profile = user_data.get('agent_profile')
+                if not agent_profile or not agent_profile.get('agent_id'):
+                    logger.error(f"Agent profile not found or missing agent_id. User data: {user_data}")
+                    raise exceptions.AuthenticationFailed('Agent ID not found in user profile')
                 
-                # Create a CustomUser instance instead of returning the raw dictionary
+                # Create a CustomUser instance with the agent_id
+                user_data['agent_id'] = agent_profile['agent_id']
                 user = CustomUser(user_data)
                 return (user, token)
             else:

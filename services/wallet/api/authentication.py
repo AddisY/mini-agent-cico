@@ -45,9 +45,15 @@ class UserManagementAuthentication(authentication.BaseAuthentication):
                     'is_superuser': user_data.get('is_superuser', False),
                 })()
 
+                # Get agent_id from agent_profile
+                agent_profile = user_data.get('agent_profile', {})
+                if not agent_profile or not agent_profile.get('agent_id'):
+                    logger.error(f"Agent profile not found or missing agent_id. User data: {user_data}")
+                    raise exceptions.AuthenticationFailed('Agent ID not found in user profile')
+
                 # Create an auth object that includes agent_id
                 auth = type('Auth', (), {
-                    'agent_id': user_data.get('agent_id'),
+                    'agent_id': agent_profile['agent_id'],
                     'token': token
                 })()
 

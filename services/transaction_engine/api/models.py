@@ -41,7 +41,7 @@ class Transaction(models.Model):
     wallet_provider = EnumChoiceField(WalletProvider, null=True, blank=True)
     bank_provider = EnumChoiceField(BankProvider, null=True, blank=True)
     amount = models.DecimalField(max_digits=15, decimal_places=2)
-    agent_id = models.UUIDField()
+    agent_id = models.CharField(max_length=50)  # Changed from UUIDField to CharField to match wallet service
     customer_identifier = models.CharField(max_length=100)  # Phone number or account number
     status = EnumChoiceField(TransactionStatus, default=TransactionStatus.INITIATED)
     commission_amount = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0.00'))

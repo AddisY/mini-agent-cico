@@ -1,4 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
+import { useDispatch } from 'react-redux';
 import authReducer from './authSlice';
 
 export const store = configureStore({
@@ -10,6 +11,4 @@ export const store = configureStore({
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 
-// Create a pre-typed useDispatch hook
-import { useDispatch } from 'react-redux';
 export const useAppDispatch = () => useDispatch<AppDispatch>(); 

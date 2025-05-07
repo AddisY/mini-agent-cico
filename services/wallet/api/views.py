@@ -41,12 +41,18 @@ class WalletViewSet(viewsets.ReadOnlyModelViewSet):
         """
         Check if an agent has sufficient balance for a transaction
         """
-        agent_id = request.data.get('agent_id')
+        agent_id = request.auth.agent_id if request.auth else None
         amount = request.data.get('amount')
         
-        if not agent_id or not amount:
+        if not agent_id:
             return Response(
-                {'detail': 'Both agent_id and amount are required'},
+                {'detail': 'Agent ID not found in token'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        if not amount:
+            return Response(
+                {'detail': 'Amount is required'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         
